@@ -15,7 +15,8 @@ define(function () {
                 resourceName = resourceName.replace('/main', '');
                 app.widget.package(resourceName);
 
-                parentRequire([resourceName], function (templateContent) {
+                // 修复加载@路径失败的bug
+                require([resourceName.split('@')[0]], function (templateContent) {
 
                     if (!isFunction(templateContent)) {
                         templateContent = app.view.define(templateContent);
