@@ -16,11 +16,13 @@ define(function () {
                 app.widget.package(resourceName);
 
                 // 修复加载@路径失败的bug
-                require([resourceName.split('@')[0]], function (templateContent) {
+                var name = resourceName.split('@')[0];
+                require([name], function (templateContent) {
 
                     if (!isFunction(templateContent)) {
                         templateContent = app.view.define(templateContent);
                     }
+                    templateContent._widgetName = name;
                     callback(templateContent);
 
                 });
