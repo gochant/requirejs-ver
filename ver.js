@@ -2,7 +2,23 @@
 define(function () {
 
     function isFunction(x) {
-        return Object.prototype.toString.call(x) == '[object Function]';
+        return Object.prototype.toString.call(x) === '[object Function]';
+    }
+    function clone(obj) {
+        if (obj === null || typeof (obj) !== 'object' || 'isActiveClone' in obj)
+            return obj;
+
+        var temp = obj instanceof Date ? new obj.constructor() : obj.constructor(); //or new Date(obj);
+
+        for (var key in obj) {
+            if (Object.prototype.hasOwnProperty.call(obj, key)) {
+                obj['isActiveClone'] = null;
+                temp[key] = clone(obj[key]);
+                delete obj['isActiveClone'];
+            }
+        }
+
+        return temp;
     }
 
     var loadResource = function (resourceName, parentRequire, callback, config) {
@@ -19,10 +35,21 @@ define(function () {
                 var name = resourceName.split('@')[0];
                 require([name], function (templateContent) {
 
-                    if (!isFunction(templateContent)) {
-                        templateContent = app.view.define(templateContent);
+                    var obj = templateContent;
+                    if (obj._widgetName) {
+                        obj._widgetName.push(name);
+                    } else {
+                        obj._widgetName = [name];
                     }
-                    templateContent._widgetName = name;
+
+                    if (!isFunction(templateContent)) {
+                        templateContent = app.view.define(obj);
+                        templateContent.export = function () {
+                            return clone(obj);
+                        };
+                    }
+                    templateContent._widgetName = obj._widgetName;
+                    templateContent._source = app.widget.splitNameParts(resourceName).source;
                     callback(templateContent);
 
                 });
